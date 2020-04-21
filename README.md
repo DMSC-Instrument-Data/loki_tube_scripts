@@ -32,3 +32,13 @@ If, however, your branch is not up-to-date you may find the following procedure 
 * To push changes on a completely new branch you will need to use `git push --set-upstream orgin <branch-name>`
 * To push changes on an existing branch just use `git push`
 
+# Using the Algorithms
+Files in the `algorithm` folder will need to be registered in the Mantid framework. Typically, by loading the files in the Mantid scripting window and executing the registration. These can then be used as Mantid algorithms as normal. [Python in Mantid](https://www.mantidproject.org/Python_In_Mantid) provides more details on this. These algorithms allow users to:
+* Load monitor data into mantid from binary files
+* Load Geant4 ascii files as mantid workspaces
+* combine monitor data and detector events into a single workspace.
+
+# Generating LOKI Geometry
+To generate the full LOKI tube geometry, simply run the script `geometry/generateLOKITubes.py` which will produce an xml file which can be loaded into mantid uing `LoadEmptyInstrument` or `LoadInstrument`
+
+
