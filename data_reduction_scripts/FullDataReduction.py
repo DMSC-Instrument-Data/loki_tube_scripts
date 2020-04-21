@@ -4,28 +4,26 @@ from mantid.simpleapi import *
 import numpy
 import csv
 
-#def loadLOKIData(SAMPLE_SANS,BG_SANS,SAMPLE_TRANS,BG_TRANS,DB): 
-def loadLOKIData(SampleSANS,SampleTRANS): 
+#def loadLOKIData(SampleSANS,SampleTRANS,BackgroundSANS,filepath): 
+def loadLOKIData(SampleSANS,SampleTRANS,BackgroundSANS,BackgroundTRANS,filepath): 
 
-    Load(Filename='/Users/judithhouston/Documents/ESS/LoKi/Design_documents/Detector/LarmorDec2019/Data/MantidReducableData/Dec2020Data/LARMOR000'+str(SampleSANS)+'.nxs', OutputWorkspace=str(SampleSANS)+'_sans_nxs')
-    MoveInstrumentComponent(Workspace=str(SampleSANS)+'_sans_nxs', ComponentName='some-sample-holder', Z=0.30530000000000002)
-    MoveInstrumentComponent(Workspace=str(SampleSANS)+'_sans_nxs', ComponentName='DetectorBench', Y=0.001)
-#RotateInstrumentComponent(Workspace='49338_sans_nxs', ComponentName='DetectorBench', Y=1, Angle=89.498397827148438)
 
-    Load(Filename='/Users/judithhouston/Documents/ESS/LoKi/Design_documents/Detector/LarmorDec2019/Data/MantidReducableData/Dec2020Data/LARMOR00049334.nxs', OutputWorkspace='49344_sans_nxs')
-    MoveInstrumentComponent(Workspace='49344_sans_nxs', ComponentName='some-sample-holder', Z=0.30530000000000002)
-    MoveInstrumentComponent(Workspace='49344_sans_nxs', ComponentName='DetectorBench', Y=0.001)
-#RotateInstrumentComponent(Workspace='49344_sans_nxs', ComponentName='DetectorBench', Y=1, Angle=89.498397827148438)
+# Step 1: Loading SANS and transmission measurement files 
+    Load(Filename=str(filepath)+'LARMOR000'+str(SampleSANS)+'.nxs', OutputWorkspace=str(SampleSANS)+'_sans_nxs')
+    MoveInstrumentComponent(Workspace=str(filepath)+'LARMOR000'+str(SampleSANS)+'_sans_nxs', ComponentName='some-sample-holder', Z=0.3053)
+    MoveInstrumentComponent(Workspace=str(filepath)+'LARMOR000'+str(SampleSANS)+'_sans_nxs', ComponentName='DetectorBench', Y=0.001)
 
-    Load(Filename='/Users/judithhouston/Documents/ESS/LoKi/Design_documents/Detector/LarmorDec2019/Data/MantidReducableData/Dec2020Data/LARMOR000'+str(SampleTRANS)+'.nxs', OutputWorkspace=str(SampleTRANS)+'_trans_nxs')
-    MoveInstrumentComponent(Workspace=str(SampleTRANS)+'_trans_nxs', ComponentName='some-sample-holder', Z=0.30530000000000002)
+    Load(Filename=str(filepath)+'LARMOR000'+str(BackgroundSANS)+'.nxs', OutputWorkspace='49344_sans_nxs')
+    MoveInstrumentComponent(Workspace=str(BackgroundSANS)+'_sans_nxs', ComponentName='some-sample-holder', Z=0.30530)
+    MoveInstrumentComponent(Workspace=str(BackgroundSANS)+'_sans_nxs', ComponentName='DetectorBench', Y=0.001)
+
+    Load(Filename=str(filepath)+'LARMOR000'+str(SampleTRANS)+'.nxs', OutputWorkspace=str(SampleTRANS)+'_trans_nxs')
+    MoveInstrumentComponent(Workspace=str(SampleTRANS)+'_trans_nxs', ComponentName='some-sample-holder', Z=0.3053)
     MoveInstrumentComponent(Workspace=str(SampleTRANS)+'_trans_nxs', ComponentName='DetectorBench', Y=0.001)
-#RotateInstrumentComponent(Workspace='49339_trans_nxs', ComponentName='DetectorBench', Y=1, Angle=89.498077392578125)
 
-    Load(Filename='/Users/judithhouston/Documents/ESS/LoKi/Design_documents/Detector/LarmorDec2019/Data/MantidReducableData/Dec2020Data/LARMOR00049335.nxs', OutputWorkspace='49335_trans_nxs')
-    MoveInstrumentComponent(Workspace='49335_trans_nxs', ComponentName='some-sample-holder', Z=0.30530000000000002)
+    Load(Filename=str(filepath)+'LARMOR000'+str(BackgroundTRANS)+'.nxs', OutputWorkspace='49335_trans_nxs')
+    MoveInstrumentComponent(Workspace='49335_trans_nxs', ComponentName='some-sample-holder', Z=0.3053)
     MoveInstrumentComponent(Workspace='49335_trans_nxs', ComponentName='DetectorBench', Y=0.001)
-#RotateInstrumentComponent(Workspace='49335_trans_nxs', ComponentName='DetectorBench', Y=1, Angle=89.498237609863281)
 
 
     CloneWorkspace(InputWorkspace=str(SampleSANS)+'_sans_nxs', OutputWorkspace=str(SampleSANS)+'rear_1D_0.9_13.5')
@@ -120,6 +118,5 @@ def loadLOKIData(SampleSANS,SampleTRANS):
     AddSampleLog(Workspace=str(SampleSANS)+'rear_1D_0.9_13.5', LogName='Transmission', LogText=str(SampleTRANS)+'_trans_sample_0.9_13.5_unfitted')
     AddSampleLog(Workspace=str(SampleSANS)+'rear_1D_0.9_13.5', LogName='TransmissionCan', LogText='49335_trans_can_0.9_13.5_unfitted')
 
-
 if __name__ == "__main__":
-    loadLOKIData(49334,49335)
+    loadLOKIData(49338,49339,49334,49335,'/Users/judithhouston/Documents/ESS/LoKi/Design_documents/Detector/LarmorDec2019/Data/MantidReducableData/Dec2020Data/')
