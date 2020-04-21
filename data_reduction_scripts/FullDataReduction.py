@@ -120,4 +120,6 @@ def loadLOKIData(SampleSANS,SampleTRANS):
     AddSampleLog(Workspace=str(SampleSANS)+'rear_1D_0.9_13.5', LogName='Transmission', LogText=str(SampleTRANS)+'_trans_sample_0.9_13.5_unfitted')
     AddSampleLog(Workspace=str(SampleSANS)+'rear_1D_0.9_13.5', LogName='TransmissionCan', LogText='49335_trans_can_0.9_13.5_unfitted')
 
-loadLOKIData(49334,49335)
+
+if __name__ == "__main__":
+    loadLOKIData(49334,49335)
