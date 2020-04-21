@@ -1,4 +1,4 @@
-# loki_tube_scripts
+# ESS LOKI Geometry Scripts
 LOKI scripts for tubes and includes conversions for GEANT4 outputs
 
 # Procedure for how to add changes to this repo 
