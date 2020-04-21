@@ -4,6 +4,10 @@ LOKI scripts for tubes and includes conversions for GEANT4 outputs
 # Procedure for how to add changes to this repo 
 ## Pull existing changes first
 If you are not sure whether or not there are existing changes you can do the following:
+In most cases you will only need to do the following:
+* `git pull`
+
+If, however, your branch is not up-to-date you may find the following procedure useful:
 * store your changes using `git stash`
 * Checkout the master branch `git checkout master`
 * Pull changes `git pull`
