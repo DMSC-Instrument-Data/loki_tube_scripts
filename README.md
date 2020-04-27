@@ -20,7 +20,7 @@ If, however, your branch is not up-to-date you may find the following procedure 
 
 ## Create branch
 * `git branch --no-track <branch-name> origin/master`
-* `git branch checkout <branch-name>`
+* `git checkout <branch-name>`
 
 ## Stage changes for commit
 * To add all files which are new at once use `git add -A`
