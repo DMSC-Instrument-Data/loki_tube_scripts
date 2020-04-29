@@ -208,7 +208,7 @@ class LokiSANSTestReduction:
         bgQ1d = self._reductionQ1D(self.bgWsName, self.bgTransWsName, "bgQ1d")
 
         reduced = Minus(LHSWorkspace=sampleQ1d, RHSWorkspace=bgQ1d)
-        CropWorkspace(InputWorkspace=reduced, XMin=0.008, XMax=0.6)
+        reduced = CropWorkspace(InputWorkspace=reduced, XMin=0.008, XMax=0.6)
 
         # add log
         AddSampleLog(Workspace=reduced, LogName='UserFile',
