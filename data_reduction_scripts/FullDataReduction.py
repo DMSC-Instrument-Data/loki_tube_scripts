@@ -1,5 +1,6 @@
 from mantid.simpleapi import *
 
+
 class LokiSANSTestReduction:
     sampleHolder = 'some-sample-holder'
     detectorBench = 'DetectorBench'
@@ -97,10 +98,10 @@ class LokiSANSTestReduction:
         self.modFile = dataFolderPath + moderatorFile
 
     def _moveSampleHolder(self, wsName, Z):
-        MoveInstrumentComponent(Workspace=wsName, ComponentName=sampleHolder, Z=Z)
+        MoveInstrumentComponent(Workspace=wsName, ComponentName=self.sampleHolder, Z=Z)
 
     def _moveDetectorBench(self, wsName, Y):
-        MoveInstrumentComponent(Workspace=wsName, ComponentName=detectorBench, Y=Y)
+        MoveInstrumentComponent(Workspace=wsName, ComponentName=self.detectorBench, Y=Y)
 
     def _moveSampleHolderAndDetectorBench(self, wsName, sampleZ, benchY):
         self._moveSampleHolder(wsName, sampleZ)
@@ -112,7 +113,7 @@ class LokiSANSTestReduction:
         Load(Filename=file, OutputWorkspace=wsName)
         return wsName
 
-    def _loadRun(self):
+    def _loadSampleRun(self):
         self.sampleWsName = self._load(self.sampleRun, '_sans_nxs')
         return self.sampleWsName
 
@@ -137,8 +138,8 @@ class LokiSANSTestReduction:
         self._moveSampleHolderAndDetectorBench(self._loadBackgroundTransmissionRun(), samplePosZ, benchPosY)
 
     def _applyMask(self, maskWs):
-        maskWs = MaskBins(InputWorkspace=maskWs, InputWorkspaceIndexType='WorkspaceIndex',
-                          InputWorkspaceIndexSet='5-1500,17500-19000')
+        maskWs = MaskBins(InputWorkspace=maskWs, InputWorkspaceIndexType='WorkspaceIndex', XMin=5, XMax=1500)
+        maskWs = MaskBins(InputWorkspace=maskWs, InputWorkspaceIndexType='WorkspaceIndex', XMin=17500, XMax=19000)
         maskWs = MaskInstrument(InputWorkspace=maskWs, DetectorIDs=self.maskingDetectorIDs)
         MaskDetectorsInShape(Workspace=maskWs, ShapeXML=self.maskingShapeXML)
         maskWs = ConvertUnits(InputWorkspace=maskWs, Target='Wavelength')
@@ -167,30 +168,30 @@ class LokiSANSTestReduction:
         return mtd[outWsName]
 
     def _reductionQ1D(self, wsName, transWsName, outWsName):
-        transWs = self._setupAndCalculateTransmission(transWsName, "tmpTransWs")
-        ws = CloneWorkspace(InputWorkspace=wsName)
-        ws = self._applyMask(ws)
-        monWs = ExtractSingleSpectrum(InputWorkspace=ws, WorkspaceIndex=0)
+        transWs = self._setupAndCalculateTransmission(transWsName, "transWs")
+        dataWs = CloneWorkspace(InputWorkspace=wsName)
+        monWs = ExtractSingleSpectrum(InputWorkspace=dataWs, WorkspaceIndex=0)
+        dataWs = self._applyMask(dataWs)
         monWs = CalculateFlatBackground(InputWorkspace=monWs, StartX=40000, EndX=99000, Mode='Mean')
         monWs = ConvertUnits(InputWorkspace=monWs, Target='Wavelength')
         monWs = Rebin(monWs, Params='0.9,-0.025,13.5')
 
         factor = 100.0 / 176.71458676442586
         valWs = CreateSingleValuedWorkspace(DataValue=factor)
-        ws = Multiply(LHSWorkspace=ws, RHSWorkspace=valWs)
+        dataWs = Multiply(LHSWorkspace=dataWs, RHSWorkspace=valWs)
 
-        dbWs = LoadRKH(Filename=self.directBeamFile)
+        dbWs = LoadRKH(Filename=self.dbFile)
         dbWs = ConvertToHistogram(InputWorkspace=dbWs)
-        dbWs = RebinToWorkspace(WorkspaceToRebin=dbWs, WorkspaceToMatch=ws)
-        normWs = RebinToWorkspace(WorkspaceToRebin=monWs, WorkspaceToMatch=ws)
+        dbWs = RebinToWorkspace(WorkspaceToRebin=dbWs, WorkspaceToMatch=dataWs)
+        normWs = RebinToWorkspace(WorkspaceToRebin=monWs, WorkspaceToMatch=dataWs)
         dbWs = Multiply(LHSWorkspace=normWs, RHSWorkspace=dbWs)
 
-        normWs = RebinToWorkspace(WorkspaceToRebin=transWs, WorkspaceToMatch=ws)
+        normWs = RebinToWorkspace(WorkspaceToRebin=transWs, WorkspaceToMatch=dataWs)
         dbWs = Multiply(LHSWorkspace=normWs, RHSWorkspace=dbWs)
 
         modWs = LoadRKH(Filename=self.modFile)
         modWs = ConvertToHistogram(InputWorkspace=modWs)
-        qResWs = TOFSANSResolutionByPixel(InputWorkspace=ws,
+        qResWs = TOFSANSResolutionByPixel(InputWorkspace=dataWs,
                                           DeltaR=8,
                                           SampleApertureRadius=4.0824829046386295,
                                           SourceApertureRadius=14.433756729740645,
@@ -198,7 +199,7 @@ class LokiSANSTestReduction:
                                           AccountForGravity=True,
                                           ExtraLength=2)
 
-        Q1D(DetBankWorkspace=ws, OutputWorkspace=outWsName, OutputBinning='0.0045,-0.08,0.7',
+        Q1D(DetBankWorkspace=dataWs, OutputWorkspace=outWsName, OutputBinning='0.0045,-0.08,0.7',
             WavelengthAdj=dbWs, AccountForGravity=True, ExtraLength=2, QResolution=qResWs)
 
         return mtd[outWsName]
@@ -218,13 +219,14 @@ class LokiSANSTestReduction:
         AddSampleLog(Workspace=reduced, LogName='TransmissionCan',
                      LogText='49335_trans_can_0.9_13.5_unfitted')
 
-    def exec(self):
+    def execute(self):
         self._loadAllData()
         self._reduce()
 
+
 if __name__ == "__main__":
     dataFolder = '/Users/judithhouston/Documents/ESS/LoKi/Design_documents/Detector/LarmorDec2019/Data/MantidReducableData/Dec2020Data/'
-    directBeamFile = 'DirectBeam_20feb_full_v3.dat',
+    directBeamFile = 'DirectBeam_20feb_full_v3.dat'
     moderatorFile = 'ModeratorStdDev_TS2_SANS_LETexptl_07Aug2015.txt'
-    lokiReduction = LokiSANSTestReduction(49338, 49339, 49334, 49335, dataFolder, directBeamFilename, moderatorFilename)
-    lokiReduction.exec()
+    lokiReduction = LokiSANSTestReduction(49338, 49339, 49334, 49335, dataFolder, directBeamFile, moderatorFile)
+    lokiReduction.execute()

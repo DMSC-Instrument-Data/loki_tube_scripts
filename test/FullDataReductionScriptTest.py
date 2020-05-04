@@ -1,6 +1,6 @@
 import unittest
 import os
-import data_reduction_scripts.FullDataReduction
+import data_reduction_scripts.FullDataReduction as dr
 from mantid.simpleapi import *
 import numpy as np
 
@@ -30,14 +30,18 @@ class LokiSANSTestReduction(unittest.TestCase):
     def test_run_script(self):
         folder = os.path.dirname(__file__)
         folder += "/test_data/"
-        data_reduction_scripts.FullDataReduction.loadLOKIData(49338, 49339, 49334, 49335, folder)
+        directBeamFile = 'DirectBeam_20feb_full_v3.dat'
+        moderatorFile = 'ModeratorStdDev_TS2_SANS_LETexptl_07Aug2015.txt'
+        lokiReduction = dr.LokiSANSTestReduction(49338, 49339, 49334, 49335, folder, directBeamFile, moderatorFile)
+        lokiReduction.execute()
 
-        resultWs = mtd['49338rear_1D_0.9_13.5']
+        resultWs = mtd['reduced']
         x = resultWs.extractX()
         y = resultWs.extractY()
 
         self.assertTrue(np.allclose(x[0], self.resX))
         self.assertTrue(np.allclose(y[0], self.resY))
+
 
 if __name__ == '__main__':
     unittest.main()
