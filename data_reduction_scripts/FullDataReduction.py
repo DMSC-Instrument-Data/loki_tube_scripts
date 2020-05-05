@@ -4,30 +4,33 @@ from mantid.simpleapi import *
 class LokiSANSTestReduction:
     sampleHolder = 'some-sample-holder'
     detectorBench = 'DetectorBench'
-    maskingShapeXML = \
+    maskingCylinderXML = \
         """
         <infinite-cylinder id="beam_stop">
             <centre x="0" y="0" z="0.0" />
             <axis x="0" y="0" z="1" />
             <radius val="0.045" />
         </infinite-cylinder><algebra val="beam_stop"/>
+        """
+    maskingPlaneXML = \
+        """
         <infinite-plane id="unique phi_plane1">
-            <point-in-plane x="0" y="0" z="0" />
-            <normal-to-plane x="-1.0" y="-1.22464679915e-16" z="0" />
-        </infinite-plane>
-        <infinite-plane id="unique phi_plane2">
-            <point-in-plane x="0" y="0" z="0" />
-            <normal-to-plane x="-1.0" y="-2.44929359829e-16" z="0" />
-        </infinite-plane>
-        <infinite-plane id="unique phi_plane3">
-            <point-in-plane x="0" y="0" z="0" />
-            <normal-to-plane x="1.0" y="2.44929359829e-16" z="0" />
-        </infinite-plane>
-        <infinite-plane id="unique phi_plane4">
-            <point-in-plane x="0" y="0" z="0" />
-            <normal-to-plane x="1.0" y="1.22464679915e-16" z="0" />
-        </infinite-plane>
-        <algebra val="#((unique phi_plane1 unique phi_plane2):(unique phi_plane3 unique phi_plane4))" />
+                <point-in-plane x="0" y="0" z="0" />
+                <normal-to-plane x="-1.0" y="-1.22464679915e-16" z="0" />
+            </infinite-plane>
+            <infinite-plane id="unique phi_plane2">
+                <point-in-plane x="0" y="0" z="0" />
+                <normal-to-plane x="-1.0" y="-2.44929359829e-16" z="0" />
+            </infinite-plane>
+            <infinite-plane id="unique phi_plane3">
+                <point-in-plane x="0" y="0" z="0" />
+                <normal-to-plane x="1.0" y="2.44929359829e-16" z="0" />
+            </infinite-plane>
+            <infinite-plane id="unique phi_plane4">
+                <point-in-plane x="0" y="0" z="0" />
+                <normal-to-plane x="1.0" y="1.22464679915e-16" z="0" />
+            </infinite-plane>
+            <algebra val="#((unique phi_plane1 unique phi_plane2):(unique phi_plane3 unique phi_plane4))" />
         """
 
     maskingDetectorIDs = \
@@ -141,7 +144,9 @@ class LokiSANSTestReduction:
         maskWs = MaskBins(InputWorkspace=maskWs, InputWorkspaceIndexType='WorkspaceIndex', XMin=5, XMax=1500)
         maskWs = MaskBins(InputWorkspace=maskWs, InputWorkspaceIndexType='WorkspaceIndex', XMin=17500, XMax=19000)
         maskWs = MaskInstrument(InputWorkspace=maskWs, DetectorIDs=self.maskingDetectorIDs)
-        MaskDetectorsInShape(Workspace=maskWs, ShapeXML=self.maskingShapeXML)
+        # each detector mask must be applied separately
+        MaskDetectorsInShape(Workspace=maskWs, ShapeXML=self.maskingCylinderXML)
+        MaskDetectorsInShape(Workspace=maskWs, ShapeXML=self.maskingPlaneXML)
         maskWs = ConvertUnits(InputWorkspace=maskWs, Target='Wavelength')
         maskWs = Rebin(InputWorkspace=maskWs, Params='0.9,-0.025,13.5')
         return maskWs
@@ -216,7 +221,7 @@ class LokiSANSTestReduction:
                      LogText='USER_Raspino_191E_BCSLarmor_24Feb2020_v1.txt')
         AddSampleLog(Workspace=reduced, LogName='Transmission',
                      LogText=str(self.sampleTransRun) + '_trans_sample_0.9_13.5_unfitted')
-        AddSampleLog(Workspace=reduced, LogName='TransmissionCan',
+        AddSampleLog(Workspace="transWs", LogName='TransmissionCan',
                      LogText='49335_trans_can_0.9_13.5_unfitted')
 
     def execute(self):
