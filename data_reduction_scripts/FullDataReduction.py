@@ -147,8 +147,6 @@ class LokiSANSTestReduction:
         # each detector mask must be applied separately
         MaskDetectorsInShape(Workspace=maskWs, ShapeXML=self.maskingCylinderXML)
         MaskDetectorsInShape(Workspace=maskWs, ShapeXML=self.maskingPlaneXML)
-        maskWs = ConvertUnits(InputWorkspace=maskWs, Target='Wavelength')
-        maskWs = Rebin(InputWorkspace=maskWs, Params='0.9,-0.025,13.5')
         return maskWs
 
     def _setupBackground(self, wsName, outWsName):
@@ -175,25 +173,29 @@ class LokiSANSTestReduction:
     def _reductionQ1D(self, wsName, transWsName, outWsName):
         transWs = self._setupAndCalculateTransmission(transWsName, "transWs")
         dataWs = CloneWorkspace(InputWorkspace=wsName)
+        # monitor workspace needs to be extracted before masking occurs.
         monWs = ExtractSingleSpectrum(InputWorkspace=dataWs, WorkspaceIndex=0)
         dataWs = self._applyMask(dataWs)
+        dataWs = ConvertUnits(InputWorkspace=dataWs, Target='Wavelength')
+        dataWs = Rebin(InputWorkspace=dataWs, Params='0.9,-0.025,13.5')
+
         monWs = CalculateFlatBackground(InputWorkspace=monWs, StartX=40000, EndX=99000, Mode='Mean')
         monWs = ConvertUnits(InputWorkspace=monWs, Target='Wavelength')
         monWs = Rebin(monWs, Params='0.9,-0.025,13.5')
 
+        # this factor seems to be a fudge factor. Explanation pending.
         factor = 100.0 / 176.71458676442586
         valWs = CreateSingleValuedWorkspace(DataValue=factor)
         dataWs = Multiply(LHSWorkspace=dataWs, RHSWorkspace=valWs)
 
+        # Setup direct beam and normalise to monitor. I.e. adjust for efficiency of detector across the wavelengths.
         dbWs = LoadRKH(Filename=self.dbFile)
         dbWs = ConvertToHistogram(InputWorkspace=dbWs)
         dbWs = RebinToWorkspace(WorkspaceToRebin=dbWs, WorkspaceToMatch=dataWs)
-        normWs = RebinToWorkspace(WorkspaceToRebin=monWs, WorkspaceToMatch=dataWs)
-        dbWs = Multiply(LHSWorkspace=normWs, RHSWorkspace=dbWs)
+        dbWs = Multiply(LHSWorkspace=monWs, RHSWorkspace=dbWs)
+        dbWs = Multiply(LHSWorkspace=transWs, RHSWorkspace=dbWs)
 
-        normWs = RebinToWorkspace(WorkspaceToRebin=transWs, WorkspaceToMatch=dataWs)
-        dbWs = Multiply(LHSWorkspace=normWs, RHSWorkspace=dbWs)
-
+        # Estimate qresolution function
         modWs = LoadRKH(Filename=self.modFile)
         modWs = ConvertToHistogram(InputWorkspace=modWs)
         qResWs = TOFSANSResolutionByPixel(InputWorkspace=dataWs,
@@ -210,11 +212,14 @@ class LokiSANSTestReduction:
         return mtd[outWsName]
 
     def _reduce(self):
+        # reduce sample
         sampleQ1d = self._reductionQ1D(self.sampleWsName, self.sampleTransWsName, "sampleQ1d")
+        # reduce sample can (background)
         bgQ1d = self._reductionQ1D(self.bgWsName, self.bgTransWsName, "bgQ1d")
 
+        # subtract reduced background from reduced sample
         reduced = Minus(LHSWorkspace=sampleQ1d, RHSWorkspace=bgQ1d)
-        reduced = CropWorkspace(InputWorkspace=reduced, XMin=0.008, XMax=0.6)
+        reduced = CropWorkspace(InputWorkspace=reduced, XMin=0.008, XMax=0.6)  # ToDo make parameters.
 
         # add log
         AddSampleLog(Workspace=reduced, LogName='UserFile',
