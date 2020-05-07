@@ -101,9 +101,11 @@ class LokiSANSTestReduction:
         self.modFile = dataFolderPath + moderatorFile
 
     def _moveSampleHolder(self, wsName, Z):
+        # data.coords['sample_position'] = ...
         MoveInstrumentComponent(Workspace=wsName, ComponentName=self.sampleHolder, Z=Z)
 
     def _moveDetectorBench(self, wsName, Y):
+        # data.coords['position'] = ...
         MoveInstrumentComponent(Workspace=wsName, ComponentName=self.detectorBench, Y=Y)
 
     def _moveSampleHolderAndDetectorBench(self, wsName, sampleZ, benchY):
@@ -141,26 +143,36 @@ class LokiSANSTestReduction:
         self._moveSampleHolderAndDetectorBench(self._loadBackgroundTransmissionRun(), samplePosZ, benchPosY)
 
     def _applyMask(self, maskWs):
+        # do not have value-based indexcing yet, must compute bin indices by hand for now
+        # data.masks['bins'] = sc.Variable(dims=['tof'], values=...)
         maskWs = MaskBins(InputWorkspace=maskWs, InputWorkspaceIndexType='WorkspaceIndex', XMin=5, XMax=1500)
         maskWs = MaskBins(InputWorkspace=maskWs, InputWorkspaceIndexType='WorkspaceIndex', XMin=17500, XMax=19000)
+        # Note that scipp may make defining pixels to be masked easier, instead of hand-writing
         maskWs = MaskInstrument(InputWorkspace=maskWs, DetectorIDs=self.maskingDetectorIDs)
         # each detector mask must be applied separately
+        # data.masks['cylinder'] = sc.Variable(dims=['spectrum'], values=...)
+        # data.masks['plane'] = sc.Variable(dims=['spectrum'], values=...)
         MaskDetectorsInShape(Workspace=maskWs, ShapeXML=self.maskingCylinderXML)
         MaskDetectorsInShape(Workspace=maskWs, ShapeXML=self.maskingPlaneXML)
         return maskWs
 
     def _setupBackground(self, wsName, outWsName):
+        # can extract using slicing, but would need to find spectrum index by hand
         ws = ExtractSpectra(InputWorkspace=wsName, DetectorList='1,4')
+        # not sure what exactly this is doing, maybe we need scipy for this?
         ws = CalculateFlatBackground(InputWorkspace=ws, StartX=40000, EndX=99000,
                                      WorkspaceIndexList='0', Mode='Mean')
         ws = CalculateFlatBackground(InputWorkspace=ws, StartX=88000, EndX=98000,
                                      WorkspaceIndexList='1', Mode='Mean')
+        # data = sc.neutron.convert(data, 'tof', 'wavelength')
         ws = ConvertUnits(InputWorkspace=ws, Target='Wavelength')
+        # data = sc.rebin(data, 'wavelength', sc.Variable(..., values=np.geomspace(0.0, 13.5, num=100))
         ws = Rebin(InputWorkspace=ws, OutputWorkspace=outWsName, Params='0.9,-0.025,13.5')
         return mtd[outWsName]
 
     def _setupAndCalculateTransmission(self, wsName, outWsName):
         transWsTmp = self._setupBackground(wsName, "transWsTmp")
+        # TODO need to look into what this is doing
         CalculateTransmission(SampleRunWorkspace=transWsTmp,
                               DirectRunWorkspace=transWsTmp,
                               OutputWorkspace=outWsName,
@@ -174,6 +186,7 @@ class LokiSANSTestReduction:
         transWs = self._setupAndCalculateTransmission(transWsName, "transWs")
         dataWs = CloneWorkspace(InputWorkspace=wsName)
         # monitor workspace needs to be extracted before masking occurs.
+        # mon = data.attrs['monitor1'] # name may vary
         monWs = ExtractSingleSpectrum(InputWorkspace=dataWs, WorkspaceIndex=0)
         dataWs = self._applyMask(dataWs)
         dataWs = ConvertUnits(InputWorkspace=dataWs, Target='Wavelength')
@@ -185,19 +198,24 @@ class LokiSANSTestReduction:
 
         # this factor seems to be a fudge factor. Explanation pending.
         factor = 100.0 / 176.71458676442586
+        # data *= factor * sc.units.dimensionless
         valWs = CreateSingleValuedWorkspace(DataValue=factor)
         dataWs = Multiply(LHSWorkspace=dataWs, RHSWorkspace=valWs)
 
         # Setup direct beam and normalise to monitor. I.e. adjust for efficiency of detector across the wavelengths.
         dbWs = LoadRKH(Filename=self.dbFile)
+        # do by hand
         dbWs = ConvertToHistogram(InputWorkspace=dbWs)
+        # db = sc.rebin(db, 'wavelength', data.coords['wavelength'])
         dbWs = RebinToWorkspace(WorkspaceToRebin=dbWs, WorkspaceToMatch=dataWs)
+        # db *= mon*trans
         dbWs = Multiply(LHSWorkspace=monWs, RHSWorkspace=dbWs)
         dbWs = Multiply(LHSWorkspace=transWs, RHSWorkspace=dbWs)
 
         # Estimate qresolution function
         modWs = LoadRKH(Filename=self.modFile)
         modWs = ConvertToHistogram(InputWorkspace=modWs)
+        # TODO Look into what this is doing
         qResWs = TOFSANSResolutionByPixel(InputWorkspace=dataWs,
                                           DeltaR=8,
                                           SampleApertureRadius=4.0824829046386295,
@@ -206,6 +224,7 @@ class LokiSANSTestReduction:
                                           AccountForGravity=True,
                                           ExtraLength=2)
 
+        # See discussion on slack
         Q1D(DetBankWorkspace=dataWs, OutputWorkspace=outWsName, OutputBinning='0.0045,-0.08,0.7',
             WavelengthAdj=dbWs, AccountForGravity=True, ExtraLength=2, QResolution=qResWs)
 
@@ -219,9 +238,12 @@ class LokiSANSTestReduction:
 
         # subtract reduced background from reduced sample
         reduced = Minus(LHSWorkspace=sampleQ1d, RHSWorkspace=bgQ1d)
+        # If binning is same (or if this is 1D) we can simply slice:
+        # reduced = reduced['Q', 10:100].copy()
         reduced = CropWorkspace(InputWorkspace=reduced, XMin=0.008, XMax=0.6)  # ToDo make parameters.
 
         # add log
+        # reduced.attrs['user-file'] = sc.Variable(value='string')
         AddSampleLog(Workspace=reduced, LogName='UserFile',
                      LogText='USER_Raspino_191E_BCSLarmor_24Feb2020_v1.txt')
         AddSampleLog(Workspace=reduced, LogName='Transmission',
