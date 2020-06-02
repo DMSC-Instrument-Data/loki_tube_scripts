@@ -32,7 +32,8 @@ class LokiSANSTestReduction(unittest.TestCase):
         folder += "/test_data/"
         directBeamFile = 'DirectBeam_20feb_full_v3.dat'
         moderatorFile = 'ModeratorStdDev_TS2_SANS_LETexptl_07Aug2015.txt'
-        lokiReduction = dr.LokiSANSTestReduction(49338, 49339, 49334, 49335, folder, directBeamFile, moderatorFile)
+        lokiReduction = dr.LokiSANSTestReduction(49338, 49339, 49334, 49335, 49335, folder, directBeamFile,
+                                                 moderatorFile)
         lokiReduction.execute()
 
         resultWs = mtd['reduced']
