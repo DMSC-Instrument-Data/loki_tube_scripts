@@ -89,10 +89,11 @@ class LokiSANSTestReduction:
         110520-110715,111032-111227,111544-111739,112056-112251,112568-112763,
         113080-113275,113592-113787,114104-114299,114616-114698
         """
-# JUDITH: Added in the DirectbeamTrans file - in the set up of this experiment, its the same as the background trans file. 
+
+    # JUDITH: Added in the DirectbeamTrans file - in the set up of this experiment, its the same as the background trans file.
 
     def __init__(self, sampleRunNumber, sampleTransmissionRunNumber, backgroundRunNumber,
-                 backgroundtransmissionRunNumber, directbeamtransmissionRunNumber, dataFolderPath, 
+                 backgroundtransmissionRunNumber, directbeamtransmissionRunNumber, dataFolderPath,
                  directBeamFile, moderatorFile):
         self.sampleRun = sampleRunNumber
         self.sampleTransRun = sampleTransmissionRunNumber
@@ -120,25 +121,24 @@ class LokiSANSTestReduction:
         return wsName
 
     def _loadSampleRun(self):
-        self.sampleWsName = self._load(self.sampleRun, '_sans_nxs')
+        self.sampleWsName = self._load(self.sampleRun, '_sans')
         return self.sampleWsName
 
     def _loadSampleTransmissionRun(self):
-        self.sampleTransWsName = self._load(self.sampleTransRun, '_trans_nxs')
+        self.sampleTransWsName = self._load(self.sampleTransRun, '_trans')
         return self.sampleTransWsName
 
     def _loadBackgroundRun(self):
-        self.bgWsName = self._load(self.backgroundRun, '_sans_nxs')
+        self.bgWsName = self._load(self.backgroundRun, '_bg_sans')
         return self.bgWsName
 
     def _loadBackgroundTransmissionRun(self):
-        self.bgTransWsName = self._load(self.backgroundTransRun, '_trans_nxs')
+        self.bgTransWsName = self._load(self.backgroundTransRun, '_bg_trans')
         return self.bgTransWsName
 
-
-#JH added this bit 
+    # JH added this bit
     def _loadDirectBeamTransmissionRun(self):
-        self.dbTransWsName = self._load(self.directBeamTransRun, '_trans_nxs')
+        self.dbTransWsName = self._load(self.directBeamTransRun, '_db_trans')
         return self.dbTransWsName
 
     def _loadAllData(self):
@@ -149,7 +149,6 @@ class LokiSANSTestReduction:
         self._moveSampleHolderAndDetectorBench(self._loadSampleTransmissionRun(), samplePosZ, benchPosY)
         self._moveSampleHolderAndDetectorBench(self._loadBackgroundTransmissionRun(), samplePosZ, benchPosY)
         self._moveSampleHolderAndDetectorBench(self._loadDirectBeamTransmissionRun(), samplePosZ, benchPosY)
-
 
     def _applyMask(self, maskWs):
         maskWs = MaskBins(InputWorkspace=maskWs, InputWorkspaceIndexType='WorkspaceIndex', XMin=5, XMax=1500)
@@ -172,16 +171,16 @@ class LokiSANSTestReduction:
 
     def _setupAndCalculateTransmission(self, wsName, outWsName):
         transWsTmp = self._setupBackground(wsName, "transWsTmp")
+        dbTransWs = self._setupBackground(wsName, "dbTransWs")
+        # setup direct beam transmission file
         CalculateTransmission(SampleRunWorkspace=transWsTmp,
-        #  DirectRunWorkspace should be dbtransWsTmp, not transWsTmp, not sure how to load that properly. 
-                              DirectRunWorkspace=transWsTmp,
+                              DirectRunWorkspace=dbTransWs,
                               OutputWorkspace=outWsName,
                               IncidentBeamMonitor=1,
                               TransmissionMonitor=4, RebinParams='0.9,-0.025,13.5',
                               FitMethod='Polynomial',
                               PolynomialOrder=3, OutputUnfittedData=True)
         return mtd[outWsName]
-
 
     def _reductionQ1D(self, wsName, transWsName, outWsName):
         transWs = self._setupAndCalculateTransmission(transWsName, "transWs")
