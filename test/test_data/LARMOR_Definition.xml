@@ -1,0 +1,302 @@
+<?xml version='1.0' encoding='ASCII'?>
+<!-- For help on the notation used to specify an Instrument Definition File see http://www.mantidproject.org/IDF -->
+<instrument xmlns="http://www.mantidproject.org/IDF/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://www.mantidproject.org/IDF/1.0 http://schema.mantidproject.org/IDF/1.0/IDFSchema.xsd"
+name="LARMOR" valid-from   ="1900-01-31 23:59:59"
+valid-to     ="2100-01-31 23:59:59"
+last-modified="2010-11-16 12:02:05">
+<!---->
+<defaults>
+	<length unit="metre"/>
+	<angle unit="degree"/>
+	<reference-frame>
+		<along-beam axis="z"/>
+		<pointing-up axis="y"/>
+		<handedness val="right"/>
+	</reference-frame>
+<default-view axis-view="z-"/></defaults>
+
+  <component type="source">
+    <location />
+  </component>
+  <type name="source" is="Source" />
+  
+  <component type="some-sample-holder">
+    <location z="25.300"/>
+  </component>
+  <type name="some-sample-holder" is="SamplePos" />
+  
+<component type="monitors" idlist="monitors">
+    <location />
+  </component>
+  
+  <type name="monitors">
+    <component type="monitor-tbd">
+      <!-- better positions and shapes will be defined later -->
+      <location z="9.8195" name="monitor1"/>
+      <location z="20.313" name="monitor2"/>
+      <location z="24.056" name="monitor3"/>
+    </component>
+    <component type="Moderator-Monitor4">
+      <!-- transmisssion detector, either in or out of beam -->
+      <location z="25.760" name="monitor4"/>
+    </component>
+    <component type="monitor-tbd">
+      <!-- better positions and shapes will be defined later -->
+      <location z="29.6500" name="monitor5"/>
+    </component>    
+    
+    <!-- Putting in monitors, which are defined in raw/neuxs
+         files, and have detector IDs, but currently not physically present 
+         on the instrument. Defined with no geometric shape, as they do not 
+         physically exist, and with a dummy position -->
+    <component type="no shape monitor">
+      <location z="0" name="placeholder monitor"/>
+      <location z="0" name="placeholder monitor"/>
+      <location z="0" name="placeholder monitor"/>
+      <location z="0" name="placeholder monitor"/>
+      <location z="0" name="placeholder monitor"/>      
+    </component>  
+    
+  </type>
+  
+  <type name="monitor-tbd" is="monitor">
+    <cylinder id="some-shape">
+      <centre-of-bottom-base r="0.0" t="0.0" p="0.0" />
+      <axis x="0.0" y="0.0" z="1.0" /> 
+      <radius val="0.01" />
+      <height val="0.03" />
+    </cylinder>   
+  </type>
+  
+  <type name="Moderator-Monitor4" is="monitor">
+    <percent-transparency val="99.9" />
+    <cuboid id="shape">
+      <left-front-bottom-point x="0.0125" y="-0.0125" z="0.0"  />
+      <left-front-top-point  x="0.0125" y="-0.0125" z="0.0"  />
+      <left-back-bottom-point  x="-0.0125" y="-0.0125" z="0.0"  />
+      <right-front-bottom-point  x="0.0125" y="0.0125" z="0.0"  />
+    </cuboid>
+    <algebra val="shape" />
+  </type>  
+
+  <type name="no shape monitor" is="monitor" />   
+
+  
+  
+  
+  
+  <component type="DetectorBench">
+      <location x="0.028" y="0.052" z="25.300"/>
+  </component>
+
+  
+  <type name="DetectorBench">
+      <component name="Panel_1500_horz_back" type="panel_1500_horz_back" idlist="Panel_DB1_Ids_horz_back">
+          <location x="0" y="+0.051" z="3.9786" rot="-13.45" axis-x="1" axis-y="0" axis-z="0" />
+      </component>
+      <component name="Panel_1200_horz_back" type="panel_1200_horz_back" idlist="Panel_DB2_Ids_horz_back">
+          <location x="0" y="-0.051" z="3.9786" rot="-13.45" axis-x="1" axis-y="0" axis-z="0" />
+      </component>
+  </type>
+  
+<type name="panel_1500_horz_back">
+  <component type="pack_horz_1500mm_top">
+    <location name="Pack_0" x="0" y="0.0254" z="0.011815913489" />
+  <!--  <location name="Pack_2_back" x="0" y="0.0254" z="0.067055913" />   -->
+	<location name="Pack_1" x="0" y="-0.0240067220973" z="0" />
+  <!--  <location name="Pack_1_back" x="0" y="-0.0240067220973" z="0.05524" />   -->
+</component>
+</type>
+
+<type name="pack_horz_1500mm_top">
+    <component type="top_tube_1500mm">
+        <locations x="0" y="0.0120033610487" z="-0.0381" z-end="0.04476" n-elements="4" name="detector_module_layer_2" rot="-8.45" axis-x="1" axis-y="0" axis-z="0"/>
+        <locations x="0" y="-0.0127" z="-0.0440079567449" z-end="0.03885205" n-elements="4" name="detector_module_layer_1" rot="-8.45" axis-x="1" axis-y="0" axis-z="0"/>
+    </component>
+</type>
+
+
+<type name="panel_1200_horz_back">
+    <component type="pack_horz_1200mm_top">
+        <location name="Pack_2" x="0" y="0.0254" z="0.011815913489" />
+        <location name="Pack_3" x="0" y="-0.0240067220973" z="0" />
+    </component>
+</type>
+
+<type name="pack_horz_1200mm_top">
+    <component type="top_tube_1200mm">
+        <locations x="0" y="0.0120033610487" z="-0.0381" z-end="0.04476" n-elements="4" name="detector_module_layer_2" rot="-8.45" axis-x="1" axis-y="0" axis-z="0"/>
+        <locations x="0" y="-0.0127" z="-0.0440079567449" z-end="0.03885205" n-elements="4" name="detector_module_layer_1" rot="-8.45" axis-x="1" axis-y="0" axis-z="0"/>
+    </component>
+</type>
+
+
+
+
+
+
+
+
+
+
+<!-- original 
+<type name="pack_horz_1500mm_top">
+  <component type="top_tube_1500mm">
+	<locations x="0" y="-0.0127" z="-0.0381" z-end="0.0381" n-elements="4" name="detector_module_layer_1" rot="-8.45" axis-x="1" axis-y="0" axis-z="0"/>
+	<locations x="0" y="0.0120033610487" z="-0.0440079567449" z-end="0.0321920432551" n-elements="4" name="detector_module_layer_2" rot="-8.45" axis-x="1" axis-y="0" axis-z="0"/>
+</component>
+</type> 
+-->
+
+<!-- adjusted for front back tube locations
+<type name="pack_horz_1500mm_top">
+  <component type="top_tube_1500mm">
+	<locations x="0" y="-0.0127" z="-0.0440079567449" z-end="0.0321920432551" n-elements="4" name="detector_module_layer_1" rot="-8.45" axis-x="1" axis-y="0" axis-z="0"/>
+	<locations x="0" y="0.0120033610487" z="-0.0381" z-end="0.0381" n-elements="4" name="detector_module_layer_2" rot="-8.45" axis-x="1" axis-y="0" axis-z="0"/>
+</component>
+</type> 
+-->
+
+
+
+
+<!-- original 
+<type name="top_tube_1500mm">
+<component type="horz_straw_1500mm">
+	<location x="0.0" y="0.0" z="0.0" name="straw_1"/>
+	<location x="0.0" y="0.0" z="0.0075" name="straw_2"/>
+	<location x="0.0" y="0.0" z="-0.0075" name="straw_3"/>
+	<location x="0.0" y="0.0065" z="0.00375" name="straw_4"/>
+	<location x="0.0" y="0.0065" z="-0.00375" name="straw_5"/>
+	<location x="-0.0" y="-0.0065" z="-0.00375" name="straw_6"/>
+	<location x="-0.0" y="-0.0065" z="0.00375" name="straw_7"/>
+</component>
+</type>
+
+
+#fixed -->
+
+
+<type name="top_tube_1500mm">
+    <component type="horz_straw_1500mm">
+        <location x="0.0" y="0.0" z="-0.0075" name="straw_0"/>
+        <location x="0.0" y="-0.0065" z="-0.00375" name="straw_1"/>
+        <location x="0.0" y="-0.0065" z="0.00375" name="straw_2"/>
+        <location x="0.0" y="0.0" z="0.0" name="straw_3"/>
+        <location x="0.0" y="0.0065" z="-0.00375" name="straw_4"/>
+        <location x="0.0" y="0.0065" z="0.00375" name="straw_5"/>
+        <location x="0.0" y="0.0" z="0.0075" name="straw_6"/>
+    </component>
+</type>
+
+
+<type name="top_tube_1200mm">
+    <component type="horz_straw_1200mm">
+        <location x="0.0" y="0.0" z="-0.0075" name="straw_0"/>
+        <location x="-0.0" y="-0.0065" z="-0.00375" name="straw_1"/>
+        <location x="-0.0" y="-0.0065" z="0.00375" name="straw_2"/>
+        <location x="0.0" y="0.0" z="0.0" name="straw_3"/>
+        <location x="0.0" y="0.0065" z="-0.00375" name="straw_4"/>
+        <location x="0.0" y="0.0065" z="0.00375" name="straw_5"/>
+        <location x="0.0" y="0.0" z="0.0075" name="straw_6"/>
+    </component>
+</type>
+
+
+
+<!-- option 2
+<type name="top_tube_1500mm">
+  <component type="horz_straw_1500mm">
+	<location x="0.0" y="0.0" z="-0.0075" name="straw_1"/> 
+	<location x="-0.0" y="-0.0065" z="-0.00375" name="straw_2"/>  
+	<location x="-0.0" y="-0.0065" z="0.00375" name="straw_3"/>  
+    <location x="0.0" y="0.0" z="0.0" name="straw_4"/>
+	<location x="0.0" y="0.0" z="0.0075" name="straw_5"/>  
+	<location x="0.0" y="0.0065" z="0.00375" name="straw_6"/> 
+	<location x="0.0" y="0.0065" z="-0.00375" name="straw_7"/>
+ 
+ <type name="top_tube_1200mm">
+ <component type="horz_straw_1200mm">
+ <location x="0.0" y="0.0065" z="-0.00375" name="straw_1"/>
+ <location x="0.0" y="0.0065" z="0.00375" name="straw_2"/>
+ <location x="0.0" y="0.0" z="0.0075" name="straw_3"/>
+ <location x="0.0" y="0.0" z="0.0" name="straw_4"/>
+ <location x="0.0" y="0.0" z="-0.0075" name="straw_5"/>
+ <location x="-0.0" y="-0.0065" z="-0.00375" name="straw_6"/>
+ <location x="-0.0" y="-0.0065" z="0.00375" name="straw_7"/>
+ </component>
+ </type>
+ 
+ 
+ 
+</component>
+</type>
+-->
+<type name="horz_straw_1500mm" outline="yes">
+    <component type="h-pixel-1500mm">
+        <locations x="0.75" x-end="-0.75" y="0" y-end="0" n-elements="512" />
+    </component>
+</type>
+
+
+<type name="horz_straw_1200mm" outline="yes">
+    <component type="h-pixel-1200mm">
+        <locations x="0.6" x-end="-0.6" y="0" y-end="0" n-elements="512" />
+    </component>
+</type>
+
+
+<type name="h-pixel-1500mm" is="detector">
+    <cylinder id="cyl-approx">
+        <centre-of-bottom-base r="0.0" t="0.0" p="0.0" />
+        <axis x="1.0" y="0.0" z="0.0" />
+        <radius val="0.00375" />
+        <height val="0.01171875" />
+    </cylinder>
+    <algebra val="cyl-approx" />
+</type>
+
+
+<type name="h-pixel-1200mm" is="detector">
+    <cylinder id="cyl-approx">
+        <centre-of-bottom-base r="0.0" t="0.0" p="0.0" />
+        <axis x="1.0" y="0.0" z="0.0" />
+        <radius val="0.00375" />
+        <height val="0.01171875" />
+    </cylinder>
+    <algebra val="cyl-approx" />
+</type>
+
+
+  <idlist idname="monitors">
+    <id start="1" end="10" />  
+  </idlist>   
+ 
+   <idlist idname="Panel_DB1_Ids_horz_back">
+    <id start="11" end="57354" />
+  </idlist>   
+
+   <idlist idname="Panel_DB2_Ids_horz_back">
+       <id start="57355" end="114698" />
+   </idlist>
+
+  <!--
+  <idlist idname="monitors">
+      <id start="1" end="10" />
+  </idlist>
+  
+  <idlist idname="Panel_DB1_Ids_horz_back">
+      <id start="11" end="28682" />
+  </idlist>
+  
+  <idlist idname="Panel_DB2_Ids_horz_back">
+      <id start="28683" end="57354" />
+  </idlist>
+  -->
+  
+  
+  
+  
+   
+</instrument>
