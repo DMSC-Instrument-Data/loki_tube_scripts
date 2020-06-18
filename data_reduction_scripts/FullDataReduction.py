@@ -113,9 +113,9 @@ class LokiSANSTestReduction:
         ws = Rebin(InputWorkspace=ws, OutputWorkspace=outWsName, Params='0.9,-0.025,13.5')
         return mtd[outWsName]
 
-    def _setupAndCalculateTransmission(self, wsName, outWsName):
-        transWsTmp = self._setupBackground(wsName, "transWsTmp")
-        dbTransWs = self._setupBackground(wsName, "dbTransWs")
+    def _setupAndCalculateTransmission(self, transWsName, dbTransWsName, outWsName):
+        transWsTmp = self._setupBackground(transWsName, "transWsTmp")
+        dbTransWs = self._setupBackground(dbTransWsName, "dbTransWs")
         # setup direct beam transmission file
         CalculateTransmission(SampleRunWorkspace=transWsTmp,
                               DirectRunWorkspace=dbTransWs,
@@ -126,8 +126,8 @@ class LokiSANSTestReduction:
                               PolynomialOrder=3, OutputUnfittedData=True)
         return mtd[outWsName]
 
-    def _reductionQ1D(self, wsName, transWsName, outWsName):
-        transWs = self._setupAndCalculateTransmission(transWsName, "transWs")
+    def _reductionQ1D(self, wsName, transWsName, dbTransWsName, outWsName):
+        transWs = self._setupAndCalculateTransmission(transWsName, dbTransWsName, "transWs")
         dataWs = CloneWorkspace(InputWorkspace=wsName)
         # monitor workspace needs to be extracted before masking occurs.
         monWs = ExtractSingleSpectrum(InputWorkspace=dataWs, WorkspaceIndex=0)
@@ -169,9 +169,9 @@ class LokiSANSTestReduction:
 
     def _reduce(self):
         # reduce sample
-        sampleQ1d = self._reductionQ1D(self.sampleWsName, self.sampleTransWsName, "sampleQ1d")
+        sampleQ1d = self._reductionQ1D(self.sampleWsName, self.sampleTransWsName, self.dbTransWsName, "sampleQ1d")
         # reduce sample can (background)
-        bgQ1d = self._reductionQ1D(self.bgWsName, self.bgTransWsName, "bgQ1d")
+        bgQ1d = self._reductionQ1D(self.bgWsName, self.bgTransWsName, self.dbTransWsName, "bgQ1d")
 
         # subtract reduced background from reduced sample
         reduced = Minus(LHSWorkspace=sampleQ1d, RHSWorkspace=bgQ1d)
